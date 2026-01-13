@@ -1,0 +1,275 @@
+{% extends 'recommendations/admin/base_admin.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="fas fa-users"></i> Gestion des Utilisateurs
+        </h1>
+        <div>
+            <button id="deleteSelectedBtn" class="btn btn-danger" disabled>
+                <i class="fas fa-trash"></i> Supprimer sélectionnés
+            </button>
+        </div>
+    </div>
+    
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-center p-3 bg-primary">
+                <h3>{{ users_data|length }}</h3>
+                <p class="mb-0">Utilisateurs totaux</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center p-3 bg-success">
+                <h3>{{ users_data|length }}</h3>
+                <p class="mb-0">Comptes actifs</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center p-3 bg-warning">
+                <h3>
+                    {% for user_data in users_data %}
+                        {% if user_data.user.is_staff %}1{% endif %}
+                    {% endfor %}
+                </h3>
+                <p class="mb-0">Administrateurs</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Table des utilisateurs -->
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Liste des utilisateurs</h4>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="selectAll">
+                    <label class="form-check-label" for="selectAll">
+                        Tout sélectionner
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th width="50">
+                                <input type="checkbox" id="selectAllHeader" class="form-check-input">
+                            </th>
+                            <th>Utilisateur</th>
+                            <th>Email</th>
+                            <th>Rôle</th>
+                            <th>Neo4j</th>
+                            <th>Notations</th>
+                            <th>Inscription</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user_data in users_data %}
+                        <tr>
+                            <td>
+                                {% if user_data.user.id != request.user.id %}
+                                <input type="checkbox" class="form-check-input user-checkbox" 
+                                       value="{{ user_data.user.id }}"
+                                       data-username="{{ user_data.user.username }}">
+                                {% endif %}
+                            </td>
+                            <td>
+                                <i class="fas fa-user{% if user_data.user.is_superuser %}-shield text-warning{% endif %}"></i>
+                                {{ user_data.user.username }}
+                                {% if user_data.user.id == request.user.id %}
+                                <span class="badge bg-info">Vous</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user_data.user.email }}</td>
+                            <td>
+                                {% if user_data.user.is_superuser %}
+                                <span class="badge bg-danger">Superadmin</span>
+                                {% elif user_data.user.is_staff %}
+                                <span class="badge bg-warning">Admin</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Utilisateur</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user_data.neo4j_exists %}
+                                <span class="text-success">✓</span>
+                                {% else %}
+                                <span class="text-danger">✗</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user_data.ratings_count }}</td>
+                            <td>{{ user_data.user.date_joined|date:"d/m/Y" }}</td>
+                            <td>
+                                {% if user_data.user.id != request.user.id %}
+                                <button class="btn btn-sm btn-danger delete-user-btn" 
+                                        data-user-id="{{ user_data.user.id }}"
+                                        data-username="{{ user_data.user.username }}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-4 text-center">
+        <a href="{% url 'recommendations:admin_dashboard' %}" class="btn btn-outline-light">
+            <i class="fas fa-arrow-left"></i> Retour au dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Modal de confirmation -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmer la suppression</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="deleteMessage">Êtes-vous sûr de vouloir supprimer cet utilisateur ?</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Cette action est irréversible et supprimera également toutes les données Neo4j de l'utilisateur.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Supprimer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+const csrftoken = getCookie('csrftoken');
+let userToDelete = null;
+let deleteModal = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    
+    // Suppression individuelle
+    document.querySelectorAll('.delete-user-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            userToDelete = {
+                id: this.dataset.userId,
+                username: this.dataset.username
+            };
+            
+            document.getElementById('deleteMessage').textContent = 
+                `Voulez-vous vraiment supprimer l'utilisateur "${userToDelete.username}" ?`;
+            
+            deleteModal.show();
+        });
+    });
+    
+    // Confirmation suppression
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        if (userToDelete) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/backoffice/users/${userToDelete.id}/delete/`;
+            
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = csrftoken;
+            form.appendChild(csrfInput);
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+    
+    // Gestion des checkboxes
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const selectAllHeader = document.getElementById('selectAllHeader');
+    const userCheckboxes = document.querySelectorAll('.user-checkbox');
+    const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+    
+    function updateDeleteButton() {
+        const checkedCount = document.querySelectorAll('.user-checkbox:checked').length;
+        deleteSelectedBtn.disabled = checkedCount === 0;
+        deleteSelectedBtn.textContent = checkedCount > 0 
+            ? `Supprimer ${checkedCount} utilisateur(s)` 
+            : 'Supprimer sélectionnés';
+    }
+    
+    [selectAllCheckbox, selectAllHeader].forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            userCheckboxes.forEach(cb => cb.checked = this.checked);
+            if (checkbox === selectAllCheckbox) {
+                selectAllHeader.checked = this.checked;
+            } else {
+                selectAllCheckbox.checked = this.checked;
+            }
+            updateDeleteButton();
+        });
+    });
+    
+    userCheckboxes.forEach(cb => {
+        cb.addEventListener('change', updateDeleteButton);
+    });
+    
+    // Suppression multiple
+    deleteSelectedBtn.addEventListener('click', function() {
+        const selectedIds = Array.from(document.querySelectorAll('.user-checkbox:checked'))
+            .map(cb => cb.value);
+        
+        if (selectedIds.length === 0) return;
+        
+        if (confirm(`Voulez-vous vraiment supprimer ${selectedIds.length} utilisateur(s) ?`)) {
+            fetch('/backoffice/users/delete-multiple/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({ user_ids: selectedIds })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Erreur: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Erreur: ' + error);
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+ <style>
+     .search-hero {
+         border-radius: 18px;
+         background: radial-gradient(900px circle at 10% 0%, rgba(229, 9, 20, 0.22), transparent 55%),
+                     radial-gradient(900px circle at 100% 10%, rgba(102, 126, 234, 0.30), transparent 55%),
+                     linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.65));
+         border: 1px solid rgba(255,255,255,0.06);
+     }
+
+     .search-panel {
+         background: rgba(0,0,0,0.35);
+         border: 1px solid rgba(255,255,255,0.08);
+         border-radius: 14px;
+     }
+
+     .result-card {
+         background: #1a1a1a;
+         border: 1px solid rgba(255,255,255,0.06);
+         border-radius: 16px;
+         overflow: hidden;
+         height: 100%;
+     }
+
+     .result-thumb {
+         height: 190px;
+         background: linear-gradient(135deg, rgba(102,126,234,0.75) 0%, rgba(118,75,162,0.75) 55%, rgba(229,9,20,0.55) 100%);
+         position: relative;
+         display: flex;
+         align-items: flex-end;
+         padding: 1rem;
+     }
+
+     .result-thumb::after {
+         content: "";
+         position: absolute;
+         inset: 0;
+         background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.70) 75%, rgba(0,0,0,0.88) 100%);
+     }
+
+     .result-thumb > * {
+         position: relative;
+         z-index: 1;
+     }
+
+     .result-title {
+         font-weight: 800;
+         letter-spacing: 0.2px;
+         margin: 0;
+         line-height: 1.2;
+     }
+
+     .result-meta {
+         color: rgba(255,255,255,0.72);
+         font-size: 0.95rem;
+     }
+
+     .chip {
+         display: inline-flex;
+         align-items: center;
+         gap: 0.35rem;
+         padding: 0.35rem 0.7rem;
+         border-radius: 999px;
+         font-size: 0.85rem;
+         background: rgba(255,255,255,0.06);
+         border: 1px solid rgba(255,255,255,0.08);
+         color: rgba(255,255,255,0.85);
+     }
+ </style>
+{% endblock %}
+
+{% block content %}
+ <div class="container mt-4">
+     <div class="search-hero p-3 p-lg-4 mb-4">
+         <div class="row align-items-center g-4">
+             <div class="col-lg-7">
+                 <h1 class="display-6 fw-bold mb-2">Recherche</h1>
+                 {% if query %}
+                 <p class="text-muted mb-0">
+                     Résultats pour: <strong class="text-white">{{ query }}</strong>
+                 </p>
+                 {% else %}
+                 <p class="text-muted mb-0">Tape un titre de série pour lancer une recherche.</p>
+                 {% endif %}
+             </div>
+             <div class="col-lg-5">
+                 <div class="search-panel p-2">
+                     <form class="row g-2" action="{% url 'recommendations:search' %}" method="GET" id="searchForm">
+                         <div class="col-12">
+                             <label for="q" class="form-label mb-1">Rechercher une série</label>
+                             <div class="input-group">
+                                 <span class="input-group-text">
+                                     <i class="fas fa-search"></i>
+                                 </span>
+                                 <input
+                                     type="search"
+                                     class="form-control"
+                                     id="q"
+                                     name="q"
+                                     placeholder="Ex: Breaking Bad, Dark, The Office..."
+                                     value="{{ query }}"
+                                     autocomplete="off"
+                                 >
+                             </div>
+                         </div>
+                         <div class="col-12 d-flex gap-2">
+                             <button type="submit" class="btn btn-primary flex-grow-1">Rechercher</button>
+                             <a href="{% url 'recommendations:series_list' %}" class="btn btn-outline-light">Catalogue</a>
+                         </div>
+                         <div class="col-12">
+                             <span class="chip">
+                                 <i class="fas fa-tv"></i>
+                                 {{ results|length }} résultat(s)
+                             </span>
+                         </div>
+                     </form>
+                 </div>
+             </div>
+         </div>
+     </div>
+
+     {% if query and results %}
+     <div class="row g-4">
+         {% for serie in results %}
+         <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+             <a href="{% url 'recommendations:series_detail' serie.title %}" class="text-decoration-none">
+                 <div class="result-card">
+                     <div class="result-thumb">
+                         <div class="w-100">
+                             <p class="result-title text-white">{{ serie.title|truncatewords:7 }}</p>
+                             <div class="result-meta mt-1">
+                                 {% if serie.year %}{{ serie.year }}{% elif serie.release_year %}{{ serie.release_year }}{% else %}—{% endif %}
+                             </div>
+                         </div>
+                     </div>
+                     <div class="p-3">
+                         {% if serie.genres %}
+                         <div class="mb-2">
+                             {% for genre in serie.genres|slice:":3" %}
+                                 <span class="genre-badge">{{ genre }}</span>
+                             {% endfor %}
+                         </div>
+                         {% endif %}
+
+                         {% if serie.description %}
+                         <p class="text-muted mb-0 small">{{ serie.description|truncatewords:16 }}</p>
+                         {% else %}
+                         <p class="text-muted mb-0 small">Voir les détails de la série.</p>
+                         {% endif %}
+                     </div>
+                 </div>
+             </a>
+         </div>
+         {% endfor %}
+     </div>
+     {% elif query and not results %}
+     <div class="card p-5 text-center">
+         <h2 class="h4 mb-2">Aucun résultat</h2>
+         <p class="text-muted mb-3">Essaie un autre mot-clé ou explore le catalogue.</p>
+         <div class="d-flex justify-content-center gap-2">
+             <a href="{% url 'recommendations:search' %}" class="btn btn-outline-light">Nouvelle recherche</a>
+             <a href="{% url 'recommendations:series_list' %}" class="btn btn-primary">Voir le catalogue</a>
+         </div>
+     </div>
+     {% else %}
+     <div class="card p-5 text-center">
+         <h2 class="h4 mb-2">Lance une recherche</h2>
+         <p class="text-muted mb-3">Utilise la barre ci-dessus (ou la recherche dans la navbar).</p>
+         <a href="{% url 'recommendations:series_list' %}" class="btn btn-primary">Explorer le catalogue</a>
+     </div>
+     {% endif %}
+ </div>
+{% endblock %}
+
+{% block extra_js %}
+ <script>
+     (function () {
+         const q = document.getElementById('q');
+         if (!q) return;
+         q.focus();
+         q.setSelectionRange(q.value.length, q.value.length);
+     })();
+ </script>
+{% endblock %}

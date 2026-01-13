@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-img-top d-flex align-items-center justify-content-center" style="height: 500px;">
+                    <h2 class="text-white">{{ serie.title }}</h2>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <h1 class="mb-3">{{ serie.title }}</h1>
+            
+            <!-- Note moyenne -->
+            {% if rating_info %}
+            <div class="mb-3">
+                <span class="star-rating">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= rating_info.average_score %}
+                        <i class="fas fa-star"></i>
+                        {% else %}
+                        <i class="far fa-star"></i>
+                        {% endif %}
+                    {% endfor %}
+                </span>
+                <span class="ms-2">{{ rating_info.average_score }}/5 ({{ rating_info.total_ratings }} notes)</span>
+            </div>
+            {% endif %}
+            
+            <!-- Genres -->
+            <div class="mb-3">
+                {% for genre in serie.genres %}
+                <span class="genre-badge">{{ genre }}</span>
+                {% endfor %}
+            </div>
+            
+            <p class="text-muted">Année: {{ serie.release_year }}</p>
+            
+            <h4 class="mt-4">Description</h4>
+            <p>{{ serie.description }}</p>
+            
+            <!-- Acteurs -->
+            {% if serie.actors %}
+            <h4 class="mt-4">Acteurs</h4>
+            <ul>
+                {% for actor in serie.actors %}
+                <li>{{ actor.namezs }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            
+            <!-- Notation utilisateur -->
+            {% if user.is_authenticated %}
+            <div class="card mt-4 p-4" style="background-color: #2a2a2a;">
+                <h4>Votre note</h4>
+                <div id="rating-section">
+                    {% if user_rating %}
+                    <p>Vous avez noté cette série: <strong>{{ user_rating }}/5</strong></p>
+                    <button class="btn btn-sm btn-danger" onclick="deleteRating()">
+                        Supprimer ma note
+                    </button>
+                    {% endif %}
+                    
+                    <div class="mt-3">
+                        <label>Noter cette série:</label>
+                        <div class="btn-group" role="group">
+                            {% for i in "12345" %}
+                            <button type="button" class="btn btn-outline-warning" onclick="rateSeries('{{ i }}')">
+                                {{ i }} <i class="fas fa-star"></i>
+                            </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-info mt-4">
+                <a href="{% url 'recommendations:login' %}">Connectez-vous</a> pour noter cette série
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if user.is_authenticated %}
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function rateSeries(score) {
+    score = Number(score);
+    const csrftoken = getCookie('csrftoken');
+    
+    fetch("{% url 'recommendations:rate_series_ajax' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({
+            series_title: "{{ serie.title }}",
+            score: score
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Notation enregistrée: ' + score + '/5');
+            location.reload();
+        } else {
+            alert('Erreur: ' + data.message);
+        }
+    });
+}
+
+function deleteRating() {
+    if (!confirm('Supprimer votre notation ?')) return;
+    
+    const csrftoken = getCookie('csrftoken');
+    
+    fetch("{% url 'recommendations:delete_rating_ajax' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({
+            series_title: "{{ serie.title }}"
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Notation supprimée');
+            location.reload();
+        } else {
+            alert('Erreur: ' + data.message);
+        }
+    });
+}
+</script>
+{% endif %}
+{% endblock %}

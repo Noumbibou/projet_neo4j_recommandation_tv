@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">
+        <i class="fas fa-lightbulb"></i> Recommandations pour vous
+    </h1>
+    
+    <!-- Recommandations hybrides (principales) -->
+    <section class="mb-5">
+        <h2 class="mb-3">
+            <i class="fas fa-trophy text-warning"></i> Top Recommandations
+        </h2>
+        {% if hybrid_recs %}
+        <div class="row">
+            {% for rec in hybrid_recs %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-img-top d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <h5 class="text-white">{{ rec.title|truncatewords:3 }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ rec.title }}</h5>
+                        <p class="card-text text-muted small">{{ rec.description|truncatewords:20 }}</p>
+                        <div class="mb-2">
+                            {% for genre in rec.genres %}
+                            <span class="genre-badge">{{ genre }}</span>
+                            {% endfor %}
+                        </div>
+                        <div class="mb-2 text-warning">
+                            Score de pertinence: {{ rec.total_score }}
+                        </div>
+                        <a href="{% url 'recommendations:series_detail' rec.title %}" class="btn btn-primary btn-sm w-100">
+                            Voir détails
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            Notez plus de séries pour obtenir de meilleures recommandations !
+        </div>
+        {% endif %}
+    </section>
+    
+    <!-- Basé sur vos genres préférés -->
+    <section class="mb-5">
+        <h3 class="mb-3">
+            <i class="fas fa-film"></i> Basé sur vos genres préférés
+        </h3>
+        {% if genre_recs %}
+        <div class="row">
+            {% for rec in genre_recs|slice:":3" %}
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>{{ rec.title }}</h5>
+                        <div>
+                            {% for genre in rec.genres %}
+                            <span class="genre-badge">{{ genre }}</span>
+                            {% endfor %}
+                        </div>
+                        <a href="{% url 'recommendations:series_detail' rec.title %}" class="btn btn-sm btn-outline-light mt-2">
+                            Découvrir
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </section>
+    
+    <!-- Utilisateurs similaires -->
+    <section class="mb-5">
+        <h3 class="mb-3">
+            <i class="fas fa-users"></i> Appréciées par des utilisateurs similaires
+        </h3>
+        {% if collab_recs %}
+        <div class="row">
+            {% for rec in collab_recs|slice:":3" %}
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>{{ rec.title }}</h5>
+                        <p class="small text-muted">
+                            <i class="fas fa-user-friends"></i> 
+                            Recommandé par {{ rec.recommended_by }} utilisateur(s) similaires
+                        </p>
+                        <div class="star-rating">
+                            Note moyenne: {{ rec.avg_rating }}/5
+                        </div>
+                        <a href="{% url 'recommendations:series_detail' rec.title %}" class="btn btn-sm btn-outline-light mt-2">
+                            Découvrir
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

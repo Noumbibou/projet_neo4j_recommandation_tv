@@ -1,0 +1,56 @@
+project_neo4j_serie_TV/
+├── manage.py
+├── db.sqlite3
+├── tv_recommender/
+│   ├── __init__.py
+│   ├── settings.py
+│   ├── urls.py
+│   ├── wsgi.py
+│   └── neo4j_db.py
+│
+├── accounts/
+│   ├── __init__.py
+│   ├── apps.py
+│   ├── signals.py           # Synchronisation Django ↔ Neo4j
+│   └── models.py
+│
+├── recommendations/
+│   ├── __init__.py
+│   ├── apps.py
+│   ├── models.py            # Models Neo4j (User, Series, Genre, etc.)
+│   ├── views.py             # Views avec rendu de templates
+│   ├── urls.py              # URLs de l'application
+│   ├── decorators.py        # Décorateurs de permissions
+│   ├── admin.py             # Configuration admin Django
+│   │
+│   ├── management/
+│   │   └── commands/
+│   │       ├── init_neo4j.py
+│   │       ├── sync_users_to_neo4j.py
+│   │       └── seed_neo4j.py
+│   │
+│   └── templates/
+│       ├── base.html                              # Template de base
+│       └── recommendations/
+│           ├── home.html                          # Page d'accueil
+│           ├── series_list.html                   # Liste des séries
+│           ├── series_detail.html                 # Détails d'une série
+│           ├── search.html                        # Recherche
+│           ├── login.html                         # Connexion
+│           ├── register.html                      # Inscription
+│           ├── profile.html                       # Profil utilisateur
+│           ├── my_ratings.html                    # Mes notations
+│           ├── recommendations.html               # Recommandations
+│           │
+│           └── admin/
+│               ├── dashboard.html                 # Dashboard admin
+│               ├── series_list.html               # Gestion séries
+│               ├── series_form.html               # Créer/Modifier série
+│               └── users_list.html                # Gestion utilisateurs
+│
+└── static/
+    ├── css/
+    │   └── custom.css
+    ├── js/
+    │   └── main.js
+    └── images/

@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">
+        <i class="fas fa-user-circle"></i> Mon Profil
+    </h1>
+    
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center p-4">
+                <h3 class="text-primary">{{ stats.series_count|default:0 }}</h3>
+                <p class="text-muted mb-0">Séries notées</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center p-4">
+                <h3 class="text-warning">{{ stats.avg_rating|default:0 }}/5</h3>
+                <p class="text-muted mb-0">Note moyenne</p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card p-4">
+                <h5>Genres préférés</h5>
+                {% if stats.genres %}
+                    {% for genre in stats.genres %}
+                    <span class="genre-badge">{{ genre }}</span>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">Notez des séries pour découvrir vos genres préférés</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notations récentes -->
+    <div class="card">
+        <div class="card-header">
+            <h4 class="mb-0">Mes notations récentes</h4>
+        </div>
+        <div class="card-body">
+            {% if ratings %}
+            <div class="table-responsive">
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th>Série</th>
+                            <th>Genres</th>
+                            <th>Ma note</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rating in ratings|slice:":10" %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'recommendations:series_detail' rating.series_title %}">
+                                    {{ rating.series_title }}
+                                </a>
+                            </td>
+                            <td>
+                                {% for genre in rating.genres %}
+                                <span class="genre-badge">{{ genre }}</span>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <span class="star-rating">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= rating.score %}
+                                        <i class="fas fa-star"></i>
+                                        {% else %}
+                                        <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </span>
+                            </td>
+                            <td>{{ rating.date|date:"d/m/Y" }}</td>
+                            <td>
+                                <a href="{% url 'recommendations:series_detail' rating.series_title %}" 
+                                   class="btn btn-sm btn-outline-light">
+                                    Voir
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="text-center mt-3">
+                <a href="{% url 'recommendations:my_ratings' %}" class="btn btn-outline-light">
+                    Voir toutes mes notations
+                </a>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-star fa-3x text-muted mb-3"></i>
+                <p class="text-muted">Vous n'avez pas encore noté de séries</p>
+                <a href="{% url 'recommendations:series_list' %}" class="btn btn-primary">
+                    Explorer le catalogue
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Bouton vers recommandations -->
+    <div class="text-center mt-4">
+        <a href="{% url 'recommendations:recommendations' %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-lightbulb"></i> Voir mes recommandations
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,451 @@
+{% extends 'recommendations/admin/base_admin.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0" style="color: rgb(255, 4, 4) !important;">
+                        <i class="fas fa-tv" style="color: rgb(255, 4, 4) !important;"></i> 
+                        {% if serie %}
+                            Modifier la série
+                        {% else %}
+                            Créer une nouvelle série
+                        {% endif %}
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="seriesForm">
+                        {% csrf_token %}
+                        
+                        <!-- Informations de base -->
+                        <h4 class="mb-3" style="color: rgb(255, 255, 255) !important;"><i class="fas fa-info-circle" style="color: rgb(255, 0, 0) !important;"></i> Informations de base</h4>
+                        
+                        <!-- Series ID (requis uniquement en création) -->
+                        {% if not serie %}
+                        <div class="mb-3">
+                            <label for="series_id" class="form-label">
+                                ID de la série <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="series_id" 
+                                   name="series_id" 
+                                   placeholder="Ex: tt0903747"
+                                   required>
+                            <small class="form-text text-muted" style="color: rgb(255, 255, 255) !important;">
+                                Format IMDb (ex: tt1234567) ou votre propre ID unique
+                            </small>
+                        </div>
+                        {% else %}
+                        <div class="mb-3">
+                            <label class="form-label">ID de la série</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   value="{{ serie.series_id }}" 
+                                   disabled>
+                            <input type="hidden" name="series_id" value="{{ serie.series_id }}">
+                            <small class="form-text text-muted">
+                                L'ID ne peut pas être modifié
+                            </small>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <!-- Titre -->
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">
+                                        Titre <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="title" 
+                                           name="title" 
+                                           value="{{ serie.title }}"
+                                           placeholder="Ex: Breaking Bad"
+                                           required>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <!-- Titre original -->
+                                <div class="mb-3">
+                                    <label for="original_title" class="form-label">
+                                        Titre original
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="original_title" 
+                                           name="original_title" 
+                                           value="{{ serie.original_title }}"
+                                           placeholder="Ex: Breaking Bad">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <!-- Année -->
+                                <div class="mb-3">
+                                    <label for="year" class="form-label">
+                                        Année de sortie
+                                    </label>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="year" 
+                                           name="year" 
+                                           value="{{ serie.year }}"
+                                           min="1900" 
+                                           max="2100"
+                                           placeholder="Ex: 2008">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <!-- Contenu adulte -->
+                                <div class="mb-3">
+                                    <label class="form-label">Options</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="is_adult" 
+                                               name="is_adult"
+                                               value="1"
+                                               {% if serie.is_adult %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_adult">
+                                            Contenu adulte (18+)
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- GENRES -->
+                        <h4 class="mb-3" style="color: rgb(255, 255, 255) !important;"><i class="fas fa-film" style="color: rgb(255, 0, 0) !important;"></i> Genres</h4>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label for="genre_select" class="form-label">
+                                    Sélectionner un genre
+                                </label>
+                                <select class="form-select" id="genre_select">
+                                    <option value="">-- Choisir un genre --</option>
+                                    {% for genre in all_genres %}
+                                    <option value="{{ genre.name }}">{{ genre.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="button" class="btn btn-success w-100" id="addGenreBtn">
+                                    <i class="fas fa-plus"></i> Ajouter
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Genres sélectionnés</label>
+                            <div id="selectedGenres" class="border rounded p-3 min-height-100">
+                                {% if serie.genres %}
+                                    {% for genre in serie.genres %}
+                                    <span class="genre-tag" data-genre="{{ genre }}">
+                                        {{ genre }}
+                                        <button type="button" class="btn-close-tag" onclick="removeGenre(this)">×</button>
+                                        <input type="hidden" name="genres[]" value="{{ genre }}">
+                                    </span>
+                                    {% endfor %}
+                                {% else %}
+                                <span class="text-muted" id="noGenresText" style="color: rgb(255, 255, 255) !important;">Aucun genre sélectionné</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Ou créer un nouveau genre -->
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-plus-circle"></i> Ou créer un nouveau genre
+                            </label>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="new_genre" 
+                                           placeholder="Ex: Science-Fiction">
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="button" class="btn btn-primary w-100" id="createGenreBtn">
+                                        <i class="fas fa-plus"></i> Créer et ajouter
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- ACTEURS -->
+                        <h4 class="mb-3" style="color: rgb(255, 255, 255) !important;"><i class="fas fa-user" style="color: rgb(255, 0, 0) !important;"></i> Acteurs</h4>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label for="actor_select" class="form-label">
+                                    Sélectionner un acteur
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="actor_search" 
+                                       placeholder="Rechercher un acteur...">
+                                <select class="form-select mt-2" id="actor_select" size="5">
+                                    {% for actor in all_actors %}
+                                    <option value="{{ actor.actor_id }}" data-name="{{ actor.name }}">
+                                        {{ actor.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="button" class="btn btn-success w-100" id="addActorBtn">
+                                    <i class="fas fa-plus"></i> Ajouter
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Acteurs sélectionnés</label>
+                            <div id="selectedActors" class="border rounded p-3 min-height-100">
+                                {% if serie.actors %}
+                                    {% for actor in serie.actors %}
+                                    <span class="actor-tag" data-actor-id="{{ actor.actor_id }}">
+                                        <i class="fas fa-user"></i> {{ actor.name }}
+                                        <button type="button" class="btn-close-tag" onclick="removeActor(this)">×</button>
+                                        <input type="hidden" name="actors[]" value="{{ actor.actor_id }}">
+                                    </span>
+                                    {% endfor %}
+                                {% else %}
+                                <span class="text-muted" id="noActorsText" style="color: rgb(255, 255, 255) !important;">Aucun acteur sélectionné</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Boutons d'action -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'recommendations:admin_series_list' %}" 
+                               class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save"></i>
+                                {% if serie %}
+                                    Enregistrer les modifications
+                                {% else %}
+                                    Créer la série
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.genre-tag, .actor-tag {
+    display: inline-block;
+    background-color: rgba(229, 9, 20, 0.2);
+    color: #e50914;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    margin: 0.3rem;
+    position: relative;
+}
+
+.actor-tag {
+    background-color: rgba(0, 123, 255, 0.2);
+    color: #007bff;
+}
+
+.page-dark * {
+    color: white !important;
+}
+
+.btn-close-tag {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-left: 0.5rem;
+    cursor: pointer;
+    padding: 0 0.3rem;
+    line-height: 1;
+}
+
+.btn-close-tag:hover {
+    opacity: 0.7;
+}
+
+.min-height-100 {
+    min-height: 100px;
+}
+
+#actor_select {
+    max-height: 200px;
+}
+
+.form-label {
+    font-weight: 500;
+    color: rgb(255, 255, 255) !important;
+}
+
+.text-danger {
+    color: #e50914 !important;
+}
+</style>
+
+<script>
+// Gestion des genres
+document.getElementById('addGenreBtn').addEventListener('click', function() {
+    const select = document.getElementById('genre_select');
+    const genreName = select.value;
+    
+    if (!genreName) {
+        alert('Veuillez sélectionner un genre');
+        return;
+    }
+    
+    addGenre(genreName);
+    select.value = '';
+});
+
+document.getElementById('createGenreBtn').addEventListener('click', function() {
+    const input = document.getElementById('new_genre');
+    const genreName = input.value.trim();
+    
+    if (!genreName) {
+        alert('Veuillez entrer un nom de genre');
+        return;
+    }
+    
+    addGenre(genreName);
+    input.value = '';
+});
+
+function addGenre(genreName) {
+    const container = document.getElementById('selectedGenres');
+    
+    // Vérifier si le genre n'est pas déjà ajouté
+    const existing = container.querySelector(`[data-genre="${genreName}"]`);
+    if (existing) {
+        alert('Ce genre est déjà ajouté');
+        return;
+    }
+    
+    // Supprimer le texte "Aucun genre"
+    const noGenresText = document.getElementById('noGenresText');
+    if (noGenresText) {
+        noGenresText.remove();
+    }
+    
+    // Créer le tag
+    const tag = document.createElement('span');
+    tag.className = 'genre-tag';
+    tag.setAttribute('data-genre', genreName);
+    tag.innerHTML = `
+        ${genreName}
+        <button type="button" class="btn-close-tag" onclick="removeGenre(this)">×</button>
+        <input type="hidden" name="genres[]" value="${genreName}">
+    `;
+    
+    container.appendChild(tag);
+}
+
+function removeGenre(btn) {
+    const tag = btn.parentElement;
+    const container = document.getElementById('selectedGenres');
+    tag.remove();
+    
+    // Remettre le texte si aucun genre
+    if (container.children.length === 0) {
+        container.innerHTML = '<span class="text-muted" id="noGenresText">Aucun genre sélectionné</span>';
+    }
+}
+
+// Gestion des acteurs
+document.getElementById('addActorBtn').addEventListener('click', function() {
+    const select = document.getElementById('actor_select');
+    const selectedOption = select.options[select.selectedIndex];
+    
+    if (!selectedOption || !selectedOption.value) {
+        alert('Veuillez sélectionner un acteur');
+        return;
+    }
+    
+    const actorId = selectedOption.value;
+    const actorName = selectedOption.getAttribute('data-name');
+    
+    addActor(actorId, actorName);
+});
+
+function addActor(actorId, actorName) {
+    const container = document.getElementById('selectedActors');
+    
+    // Vérifier si l'acteur n'est pas déjà ajouté
+    const existing = container.querySelector(`[data-actor-id="${actorId}"]`);
+    if (existing) {
+        alert('Cet acteur est déjà ajouté');
+        return;
+    }
+    
+    // Supprimer le texte "Aucun acteur"
+    const noActorsText = document.getElementById('noActorsText');
+    if (noActorsText) {
+        noActorsText.remove();
+    }
+    
+    // Créer le tag
+    const tag = document.createElement('span');
+    tag.className = 'actor-tag';
+    tag.setAttribute('data-actor-id', actorId);
+    tag.innerHTML = `
+        <i class="fas fa-user"></i> ${actorName}
+        <button type="button" class="btn-close-tag" onclick="removeActor(this)">×</button>
+        <input type="hidden" name="actors[]" value="${actorId}">
+    `;
+    
+    container.appendChild(tag);
+}
+
+function removeActor(btn) {
+    const tag = btn.parentElement;
+    const container = document.getElementById('selectedActors');
+    tag.remove();
+    
+    // Remettre le texte si aucun acteur
+    if (container.children.length === 0) {
+        container.innerHTML = '<span class="text-muted" id="noActorsText">Aucun acteur sélectionné</span>';
+    }
+}
+
+// Recherche d'acteurs
+document.getElementById('actor_search').addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const select = document.getElementById('actor_select');
+    const options = select.options;
+    
+    for (let i = 0; i < options.length; i++) {
+        const actorName = options[i].getAttribute('data-name').toLowerCase();
+        if (actorName.includes(searchTerm)) {
+            options[i].style.display = '';
+        } else {
+            options[i].style.display = 'none';
+        }
+    }
+});
+</script>
+{% endblock %}

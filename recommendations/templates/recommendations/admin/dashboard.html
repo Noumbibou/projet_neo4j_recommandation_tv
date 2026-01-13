@@ -1,0 +1,121 @@
+{% extends 'recommendations/admin/base_admin.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="fas fa-tachometer-alt"></i> Dashboard Admin
+        </h1>
+        <div>
+            <a href="{% url 'recommendations:admin_series_create' %}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Nouvelle série
+            </a>
+        </div>
+    </div>
+    
+    <!-- Statistiques globales -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-center p-4 bg-primary">
+                <h2>{{ total_users }}</h2>
+                <p class="mb-0">Utilisateurs inscrits</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center p-4 bg-success">
+                <h2>{{ total_series }}</h2>
+                <p class="mb-0">Séries dans le catalogue</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center p-4 bg-warning">
+                <h2>{{ popular_series|length }}</h2>
+                <p class="mb-0">Séries populaires</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Séries les plus populaires -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4 class="mb-0">Top 10 - Séries les plus populaires</h4>
+        </div>
+        <div class="card-body">
+            <table class="table table-dark table-hover">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Série</th>
+                        <th>Nombre de notes</th>
+                        <th>Note moyenne</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for serie in popular_series %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ serie.title }}</td>
+                        <td>{{ serie.ratings_count }}</td>
+                        <td>
+                            <span class="star-rating">
+                                {{ serie.avg_score }}/5
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'recommendations:series_detail' serie.title %}" 
+                               class="btn btn-sm btn-outline-light">
+                                Voir
+                            </a>
+                            <a href="{% url 'recommendations:admin_series_edit' serie.title %}" 
+                               class="btn btn-sm btn-outline-warning">
+                                Modifier
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Utilisateurs les plus actifs -->
+    <div class="card">
+        <div class="card-header">
+            <h4 class="mb-0">Top 10 - Utilisateurs les plus actifs</h4>
+        </div>
+        <div class="card-body">
+            <table class="table table-dark table-hover">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Utilisateur</th>
+                        <th>Nombre de notations</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in active_users %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            <i class="fas fa-user"></i> {{ user.username }}
+                        </td>
+                        <td>{{ user.ratings_count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Navigation rapide -->
+    <div class="mt-4 text-center">
+        <a href="{% url 'recommendations:admin_series_list' %}" class="btn btn-outline-light me-2">
+            <i class="fas fa-tv"></i> Gérer les séries
+        </a>
+        <a href="{% url 'recommendations:admin_users' %}" class="btn btn-outline-light">
+            <i class="fas fa-users"></i> Gérer les utilisateurs
+        </a>
+    </div>
+</div>
+{% endblock %}

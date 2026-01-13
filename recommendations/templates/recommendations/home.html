@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6">
+                <h3 class="display-3 fw-bold mb-4">
+                    Découvrez vos prochaines séries préférées
+                </h3>
+                <p class="lead mb-4">
+                    Un système de recommandation intelligent basé sur vos goûts et vos notations
+                </p>
+                {% if not user.is_authenticated %}
+                <a href="{% url 'recommendations:register' %}" class="btn btn-primary btn-lg me-3">
+                    Commencer gratuitement
+                </a>
+                <a href="{% url 'recommendations:series_list' %}" class="btn btn-outline-light btn-lg">
+                    Explorer le catalogue
+                </a>
+                {% else %}
+                <a href="{% url 'recommendations:recommendations' %}" class="btn btn-primary btn-lg">
+                    Voir mes recommandations
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Séries populaires -->
+<section class="container mt-5">
+    <h2 class="mb-4">Séries populaires</h2>
+    <div class="row">
+        {% for serie in series %}
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-img-top d-flex align-items-center justify-content-center">
+                    <h4 class="text-white">{{ serie.title|truncatewords:2 }}</h4>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ serie.title }}</h5>
+                    <p class="card-text text-muted small">{{ serie.description|truncatewords:15 }}</p>
+                    <div class="mb-2">
+                        {% for genre in serie.genres %}
+                        <span class="genre-badge">{{ genre }}</span>
+                        {% endfor %}
+                    </div>
+                    <a href="{% url 'recommendations:series_detail' serie.title %}" class="btn btn-sm btn-primary">
+                        Voir détails
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="text-center mt-4">
+        <a href="{% url 'recommendations:series_list' %}" class="btn btn-outline-light">
+            Voir tout le catalogue <i class="fas fa-arrow-right ms-2"></i>
+        </a>
+    </div>
+</section>
+
+<!-- Fonctionnalités -->
+<section class="container my-5 py-5">
+    <h2 class="text-center mb-5">Pourquoi TV Recommender ?</h2>
+    <div class="row">
+        <div class="col-md-4 text-center">
+            <i class="fas fa-brain fa-3x text-primary mb-3"></i>
+            <h4>Recommandations intelligentes</h4>
+            <p class="text-muted">Algorithmes avancés basés sur vos goûts</p>
+        </div>
+        <div class="col-md-4 text-center">
+            <i class="fas fa-users fa-3x text-primary mb-3"></i>
+            <h4>Filtrage collaboratif</h4>
+            <p class="text-muted">Découvrez ce que les autres aiment</p>
+        </div>
+        <div class="col-md-4 text-center">
+            <i class="fas fa-star fa-3x text-primary mb-3"></i>
+            <h4>Notez et suivez</h4>
+            <p class="text-muted">Gardez trace de vos séries préférées</p>
+        </div>
+    </div>
+</section>
+{% endblock %}
