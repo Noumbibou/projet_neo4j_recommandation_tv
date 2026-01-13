@@ -1,0 +1,236 @@
+Guide Complet - Import et Utilisation de vos Datasets
+📊 Structure de vos Datasets
+Fichiers CSV disponibles
+
+actors.csv
+
+actor_id : Identifiant unique de l'acteur
+name : Nom de l'acteur
+birth_year : Année de naissance
+death_year : Année de décès (si applicable)
+professions : Professions de l'acteur
+known_for_titles : Titres connus
+
+
+series.csv
+
+series_id : Identifiant unique de la série
+title : Titre de la série
+original_title : Titre original
+year : Année de sortie
+genres : Genres (séparés par des virgules)
+is_adult : Contenu adulte (0/1)
+
+
+genres.csv
+
+genre_id : Identifiant unique du genre
+name : Nom du genre
+
+
+series_genres.csv (Relations)
+
+series_id : ID de la série
+genre_name : Nom du genre
+
+
+series_actors.csv (Relations)
+
+series_id : ID de la série
+actor_id : ID de l'acteur
+
+
+users.csv
+
+user_id : Identifiant unique
+name : Nom d'utilisateur
+age : Âge
+gender : Genre
+occupation : Profession
+join_date : Date d'inscription
+email : Email
+
+
+
+
+🚀 Étapes d'Installation et Import
+1. Préparer l'environnement
+bash# Installer les dépendances
+pip install django neo4j python-decouple
+
+# Créer la structure du projet (si pas déjà fait)
+django-admin startproject tv_recommender .
+python manage.py startapp accounts
+python manage.py startapp recommendations
+2. Configurer Neo4j
+bash# Démarrer Neo4j Desktop
+# Vérifier que le port est 7687
+# Noter votre mot de passe
+3. Placer vos fichiers CSV
+Créez un dossier data/ à la racine du projet :
+project_neo4j_serie_TV/
+├── data/
+│   ├── actors.csv
+│   ├── series.csv
+│   ├── genres.csv
+│   ├── series_genres.csv
+│   ├── series_actors.csv
+│   └── users.csv
+├── manage.py
+└── ...
+4. Initialiser la base Django
+bash# Créer les migrations
+python manage.py makemigrations
+python manage.py migrate
+
+# Créer un superuser (admin)
+python manage.py createsuperuser
+# Username: admin
+# Email: admin@example.com
+# Password: (votre choix)
+5. Initialiser Neo4j
+bash# Créer les contraintes et index
+python manage.py init_neo4j_constraints
+6. Importer les données CSV
+bash# Import complet (ordre important !)
+python manage.py import_csv_data \
+    --genres data/genres.csv \
+    --actors data/actors.csv \
+    --series data/series.csv \
+    --series-genres data/series_genres.csv \
+    --series-actors data/series_actors.csv \
+    --users data/users.csv
+
+# Ou importer avec limite (pour tester)
+python manage.py import_csv_data \
+    --genres data/genres.csv \
+    --actors data/actors.csv --limit 1000 \
+    --series data/series.csv --limit 500 \
+    --series-genres data/series_genres.csv \
+    --series-actors data/series_actors.csv
+7. Vérifier l'import
+bash# Afficher les statistiques
+python manage.py stats_neo4j
+8. Synchroniser les utilisateurs Django
+bash# Synchroniser les utilisateurs Django vers Neo4j
+python manage.py sync_django_to_neo4j
+9. Lancer le serveur
+bashpython manage.py runserver
+
+📝 Format des CSV attendu
+actors.csv
+csvactor_id,name,birth_year,death_year,professions,known_for_titles
+nm0000001,Fred Astaire,1899,1987,actor|soundtrack,tt0050419|tt0045537
+nm0000002,Lauren Bacall,1924,2014,actress|soundtrack,tt0037382|tt0071877
+series.csv
+csvseries_id,title,original_title,year,genres,is_adult
+tt0903747,Breaking Bad,Breaking Bad,2008,Crime|Drama|Thriller,0
+tt0944947,Game of Thrones,Game of Thrones,2011,Action|Adventure|Drama,0
+genres.csv
+csvgenre_id,name
+1,Action
+2,Adventure
+3,Drama
+series_genres.csv
+csvseries_id,genre_name
+tt0903747,Crime
+tt0903747,Drama
+tt0944947,Action
+series_actors.csv
+csvseries_id,actor_id
+tt0903747,nm0186505
+tt0903747,nm0666739
+tt0944947,nm3592338
+users.csv
+csvuser_id,name,age,gender,occupation,join_date,email
+1,alice_tv,28,F,engineer,2024-01-15,alice@example.com
+2,bob_series,35,M,teacher,2024-01-20,bob@example.com
+
+🎯 Architecture Finale
+Dans Django (PostgreSQL/SQLite)
+python# Modèle User Django
+User:
+  - id (PK)              → utilisé comme user_id dans Neo4j
+  - username             → utilisé comme name dans Neo4j
+  - email                → synchronisé avec Neo4j
+  - password (hashé)     → JAMAIS dans Neo4j
+  - is_staff             → Permissions admin
+  - is_superuser         → Super-admin
+  - date_joined          → Utilisé comme join_date dans Neo4j
+Dans Neo4j (Base de graphes)
+cypher// Nœuds
+(:User {user_id, name, email, age, gender, occupation, join_date})
+(:Series {series_id, title, original_title, year, is_adult})
+(:Actor {actor_id, name, birth_year, death_year, professions, known_for_titles})
+(:Genre {name})
+
+// Relations
+(User)-[:RATED {rating, series_title, date, timestamp}]->(Series)
+(Series)-[:HAS_GENRE]->(Genre)
+(Series)-[:HAS_ACTOR]->(Actor)
+
+🔄 Flux de Données
+1. Utilisateur s'inscrit
+Django User créé
+    ↓
+Signal post_save déclenché
+    ↓
+Neo4j User créé avec user_id = Django User.id
+    ↓
+Pas de mot de passe dans Neo4j
+2. Utilisateur note une série
+Utilisateur connecté (Django Auth)
+    ↓
+user_id = str(request.user.id)
+    ↓
+Cypher: MATCH (u:User {user_id: $user_id})
+        MATCH (s:Series {series_id: $series_id})
+        CREATE (u)-[:RATED {rating: $rating}]->(s)
+3. Admin crée une série
+Admin connecté (is_staff = True)
+    ↓
+Génère series_id unique (UUID)
+    ↓
+Series.create(series_id, title, ...)
+    ↓
+Série créée dans Neo4j uniquement
+4. Recommandations
+user_id = str(request.user.id)
+    ↓
+Recommendation.hybrid(user_id)
+    ↓
+Neo4j analyse le graphe
+    ↓
+Retourne les séries recommandées
+
+🛠️ Commandes Utiles
+Import et Gestion
+bash# Vider Neo4j (ATTENTION: supprime tout !)
+python manage.py clear_neo4j --confirm
+
+# Réinitialiser les contraintes
+python manage.py init_neo4j_constraints
+
+# Importer seulement les genres
+python manage.py import_csv_data --genres data/genres.csv
+
+# Importer avec limite (pour tester)
+python manage.py import_csv_data --actors data/actors.csv --limit 100
+
+# Statistiques Neo4j
+python manage.py stats_neo4j
+
+# Synchroniser Django → Neo4j
+python manage.py sync_django_to_neo4j
+
+# Forcer la mise à jour
+python manage.py sync_django_to_neo4j --force
+Développement
+bash# Créer un superuser
+python manage.py createsuperuser
+
+# Lancer le serveur
+python manage.py runserver
+
+# Shell Django (pour tester)
+python manage.py shell
