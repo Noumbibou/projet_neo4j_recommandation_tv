@@ -112,17 +112,25 @@ class Command(BaseCommand):
                     known_for_titles = row.get('known_for_titles')
                     
                     if actor_id and name:
-                        Actor.create(
-                            actor_id=actor_id,
-                            name=name,
-                            birth_year=int(birth_year) if birth_year and birth_year != '\\N' else None,
-                            death_year=int(death_year) if death_year and death_year != '\\N' else None,
-                            professions=professions,
-                            known_for_titles=known_for_titles
-                        )
-                        count += 1
-                        if count % 100 == 0:
-                            self.stdout.write(f'  {count} acteurs importés...')
+                        try:
+                            Actor.create(
+                                actor_id=actor_id,
+                                name=name,
+                                birth_year=int(birth_year) if birth_year and birth_year != '\\N' else None,
+                                death_year=int(death_year) if death_year and death_year != '\\N' else None,
+                                professions=professions,
+                                known_for_titles=known_for_titles
+                            )
+                            count += 1
+                            if count % 100 == 0:
+                                self.stdout.write(f'  {count} acteurs importés...')
+                        except Exception as actor_error:
+                            # Si l'acteur existe déjà, continuer
+                            if "already exists" in str(actor_error):
+                                self.stdout.write(f'  Acteur "{name}" (ID: {actor_id}) déjà existent, skip...')
+                                continue
+                            else:
+                                raise actor_error
             
             self.stdout.write(self.style.SUCCESS(f'✓ {count} acteurs importés'))
         
@@ -153,16 +161,24 @@ class Command(BaseCommand):
                     is_adult = row.get('is_adult', '0')
                     
                     if series_id and title:
-                        Series.create(
-                            series_id=series_id,
-                            title=title,
-                            original_title=original_title or title,
-                            year=int(year) if year and year != '\\N' else None,
-                            is_adult=(is_adult == '1')
-                        )
-                        count += 1
-                        if count % 100 == 0:
-                            self.stdout.write(f'  {count} séries importées...')
+                        try:
+                            Series.create(
+                                series_id=series_id,
+                                title=title,
+                                original_title=original_title or title,
+                                year=int(year) if year and year != '\\N' else None,
+                                is_adult=(is_adult == '1')
+                            )
+                            count += 1
+                            if count % 100 == 0:
+                                self.stdout.write(f'  {count} séries importées...')
+                        except Exception as series_error:
+                            # Si la série existe déjà, continuer
+                            if "already exists" in str(series_error):
+                                self.stdout.write(f'  Série "{title}" (ID: {series_id}) déjà existente, skip...')
+                                continue
+                            else:
+                                raise series_error
             
             self.stdout.write(self.style.SUCCESS(f'✓ {count} séries importées'))
         

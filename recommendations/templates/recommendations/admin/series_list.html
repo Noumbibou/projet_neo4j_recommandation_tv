@@ -1,0 +1,477 @@
+{% extends 'recommendations/admin/base_admin.html' %}
+
+
+{% block content %}
+<div class="container-fluid mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 style="color: rgb(255, 0, 0) !important;">
+            <i class="fas fa-tv"></i> Gestion des Séries
+        </h1>
+        <div>
+            <a href="{% url 'recommendations:admin_series_create' %}" class="btn btn-outline-primary btn-lg">
+                <i class="fas fa-plus"></i> Nouvelle série
+            </a>
+            <button id="deleteSelectedBtn" class="btn btn-outline-danger btn-lg" disabled>
+                <i class="fas fa-trash"></i> Supprimer sélectionnées
+            </button>
+        </div>
+    </div>
+    
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center p-3">
+                <h3 class="text-primary">{{ series|length }}</h3>
+                <p class="mb-0">Séries totales</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center p-3">
+                <h3 id="totalGenres" class="text-info">-</h3>
+                <p class="mb-0">Genres différents</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filtres et recherche -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" 
+                               class="form-control" 
+                               id="searchInput" 
+                               placeholder="Rechercher par titre...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="genreFilter">
+                        <option value="">Tous les genres</option>
+                        <!-- Les genres seront ajoutés dynamiquement -->
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="yearFilter">
+                        <option value="">Toutes les années</option>
+                        <option value="2020s">2020+</option>
+                        <option value="2010s">2010-2019</option>
+                        <option value="2000s">2000-2009</option>
+                        <option value="1990s">1990-1999</option>
+                        <option value="older">Avant 1990</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Table des séries -->
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Liste des séries (<span id="seriesCount">{{ series|length }}</span>)</h4>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="selectAll">
+                    <label class="form-check-label" for="selectAll">
+                        Tout sélectionner
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover" id="seriesTable">
+                    <thead>
+                        <tr>
+                            <th width="50">
+                                <input type="checkbox" id="selectAllHeader" class="form-check-input">
+                            </th>
+                            <th>Titre</th>
+                            <th>Année</th>
+                            <th>Genres</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for serie in series %}
+                        <tr class="series-row" 
+                            data-title="{{ serie.title|lower }}"
+                            data-year="{{ serie.year|default:'' }}"
+                            data-genres="{% for g in serie.genres %}{{ g|lower }} {% endfor %}">
+                            <td>
+                                <input type="checkbox" 
+                                       class="form-check-input series-checkbox" 
+                                        value="{{ serie.series_id }}"
+                                       data-title="{{ serie.title }}">
+                            </td>
+                            <td>
+                                <strong>{{ serie.title }}</strong>
+                                {% if serie.original_title and serie.original_title != serie.title %}
+                                <br><small class="text-muted">{{ serie.original_title }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if serie.year %}
+                                    {{ serie.year }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if serie.genres %}
+                                    {% for genre in serie.genres|slice:":3" %}
+                                    <span class="genre-badge">{{ genre }}</span>
+                                    {% endfor %}
+                                    {% if serie.genres|length > 3 %}
+                                    <span class="text-muted">+{{ serie.genres|length|add:"-3" }}</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">Aucun</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'recommendations:series_detail' serie.title %}" 
+                                       class="btn btn-sm btn-outline-info"
+                                       title="Voir">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'recommendations:admin_series_edit' serie.title %}" 
+                                       class="btn btn-sm btn-outline-warning"
+                                       title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-danger delete-btn" 
+                                            data-series-id="{{ serie.series_id }}"
+                                            data-title="{{ serie.title }}"
+                                            title="Supprimer">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">Aucune série trouvée</p>
+                                <a href="{% url 'recommendations:admin_series_create' %}" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Créer la première série
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-4 text-center">
+        <a href="{% url 'recommendations:admin_dashboard' %}" class="btn btn-outline-light">
+            <i class="fas fa-arrow-left"></i> Retour au dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmer la suppression</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="deleteMessage">Êtes-vous sûr de vouloir supprimer cette série ?</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Cette action est irréversible et supprimera également toutes les notations associées.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Supprimer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.genre-badge {
+    background-color: rgba(108, 117, 125, 0.2);
+    color: #fff;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    margin: 0.1rem;
+    display: inline-block;
+    border: 1px solid rgba(108, 117, 125, 0.3);
+}
+
+.btn-group .btn {
+    margin: 0 2px;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.star-rating {
+    color: gold;
+}
+
+#seriesTable tbody tr {
+    transition: background-color 0.2s;
+}
+
+#seriesTable tbody tr:hover {
+    background-color: rgba(108, 117, 125, 0.15);
+}
+</style>
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+const csrftoken = getCookie('csrftoken');
+let seriesToDelete = null;
+let deleteModal = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    
+    // Charger les statistiques
+    loadStatistics();
+    
+    // Charger les notes pour chaque série
+    loadRatings();
+    
+    // Populer le filtre de genres
+    populateGenreFilter();
+    
+    // Recherche en temps réel
+    document.getElementById('searchInput').addEventListener('input', filterSeries);
+    document.getElementById('genreFilter').addEventListener('change', filterSeries);
+    document.getElementById('yearFilter').addEventListener('change', filterSeries);
+    
+    // Gestion des checkboxes
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const selectAllHeader = document.getElementById('selectAllHeader');
+    const seriesCheckboxes = document.querySelectorAll('.series-checkbox');
+    const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+    
+    function updateDeleteButton() {
+        const checkedCount = document.querySelectorAll('.series-checkbox:checked').length;
+        deleteSelectedBtn.disabled = checkedCount === 0;
+        deleteSelectedBtn.innerHTML = checkedCount > 0 
+            ? `<i class="fas fa-trash"></i> Supprimer ${checkedCount} série(s)` 
+            : '<i class="fas fa-trash"></i> Supprimer sélectionnées';
+    }
+    
+    [selectAllCheckbox, selectAllHeader].forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const visibleCheckboxes = Array.from(seriesCheckboxes).filter(cb => {
+                const row = cb.closest('tr');
+                return row.style.display !== 'none';
+            });
+            
+            visibleCheckboxes.forEach(cb => cb.checked = this.checked);
+            
+            if (checkbox === selectAllCheckbox) {
+                selectAllHeader.checked = this.checked;
+            } else {
+                selectAllCheckbox.checked = this.checked;
+            }
+            updateDeleteButton();
+        });
+    });
+    
+    seriesCheckboxes.forEach(cb => {
+        cb.addEventListener('change', updateDeleteButton);
+    });
+    
+    // Suppression individuelle
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            seriesToDelete = {
+                id: this.dataset.seriesId,
+                title: this.dataset.title
+            };
+            
+            document.getElementById('deleteMessage').textContent = 
+                `Voulez-vous vraiment supprimer la série "${seriesToDelete.title}" ?`;
+            
+            deleteModal.show();
+        });
+    });
+    
+    // Confirmation suppression
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        if (seriesToDelete) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/backoffice/series/${encodeURIComponent(seriesToDelete.title)}/delete/`;
+            
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = csrftoken;
+            form.appendChild(csrfInput);
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+    
+    // Suppression multiple
+    deleteSelectedBtn.addEventListener('click', function() {
+        const selectedIds = Array.from(document.querySelectorAll('.series-checkbox:checked'))
+            .map(cb => cb.value);
+        const selectedTitles = Array.from(document.querySelectorAll('.series-checkbox:checked'))
+            .map(cb => cb.dataset.title);
+        
+        if (selectedIds.length === 0) return;
+        
+        if (confirm(`Voulez-vous vraiment supprimer ${selectedIds.length} série(s) ?\n\n${selectedTitles.slice(0, 5).join('\n')}${selectedIds.length > 5 ? '\n...' : ''}`)) {
+            // Supprimer chaque série (vous pouvez créer une route dédiée pour supprimer en masse)
+            let deleted = 0;
+            selectedTitles.forEach(title => {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/backoffice/series/${encodeURIComponent(title)}/delete/`;
+                
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrfmiddlewaretoken';
+                csrfInput.value = csrftoken;
+                form.appendChild(csrfInput);
+                
+                document.body.appendChild(form);
+                deleted++;
+                
+                if (deleted === selectedTitles.length) {
+                    form.submit(); // Soumettre le dernier formulaire qui rechargera la page
+                } else {
+                    fetch(form.action, {
+                        method: 'POST',
+                        body: new FormData(form)
+                    });
+                }
+            });
+        }
+    });
+});
+
+function loadStatistics() {
+    // Compter les genres uniques
+    const genres = new Set();
+    document.querySelectorAll('.genre-badge').forEach(badge => {
+        genres.add(badge.textContent.trim());
+    });
+    document.getElementById('totalGenres').textContent = genres.size;
+    
+    // Ces statistiques seront chargées via AJAX si nécessaire
+    // Pour l'instant, afficher un placeholder
+}
+
+function loadRatings() {
+    const ratingCells = document.querySelectorAll('.ratings-count');
+    const avgCells = document.querySelectorAll('.avg-rating');
+    
+    ratingCells.forEach((cell, index) => {
+        const seriesId = cell.dataset.seriesId;
+        
+        fetch(`/ajax/series-stats/${seriesId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    cell.innerHTML = data.total_ratings || '0';
+                    avgCells[index].innerHTML = data.average_rating 
+                        ? `<span class="star-rating">${data.average_rating}/5</span>` 
+                        : '<span class="text-muted">N.C.</span>';
+                } else {
+                    cell.innerHTML = '0';
+                    avgCells[index].innerHTML = '<span class="text-muted">N.C.</span>';
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement des statistiques:', error);
+                cell.innerHTML = '0';
+                avgCells[index].innerHTML = '<span class="text-muted">Err.</span>';
+            });
+    });
+}
+
+function populateGenreFilter() {
+    const genres = new Set();
+    document.querySelectorAll('.genre-badge').forEach(badge => {
+        genres.add(badge.textContent.trim());
+    });
+    
+    const select = document.getElementById('genreFilter');
+    Array.from(genres).sort().forEach(genre => {
+        const option = document.createElement('option');
+        option.value = genre.toLowerCase();
+        option.textContent = genre;
+        select.appendChild(option);
+    });
+}
+
+function filterSeries() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const genreFilter = document.getElementById('genreFilter').value.toLowerCase();
+    const yearFilter = document.getElementById('yearFilter').value;
+    
+    const rows = document.querySelectorAll('.series-row');
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        const title = row.dataset.title;
+        const year = parseInt(row.dataset.year);
+        const genres = row.dataset.genres;
+        
+        let show = true;
+        
+        // Filtre de recherche
+        if (searchTerm && !title.includes(searchTerm)) {
+            show = false;
+        }
+        
+        // Filtre de genre
+        if (genreFilter && !genres.includes(genreFilter)) {
+            show = false;
+        }
+        
+        // Filtre d'année
+        if (yearFilter) {
+            if (yearFilter === '2020s' && year < 2020) show = false;
+            if (yearFilter === '2010s' && (year < 2010 || year >= 2020)) show = false;
+            if (yearFilter === '2000s' && (year < 2000 || year >= 2010)) show = false;
+            if (yearFilter === '1990s' && (year < 1990 || year >= 2000)) show = false;
+            if (yearFilter === 'older' && year >= 1990) show = false;
+        }
+        
+        row.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
+    });
+    
+    document.getElementById('seriesCount').textContent = visibleCount;
+}
+</script>
+{% endblock %}

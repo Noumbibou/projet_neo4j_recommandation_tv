@@ -2,13 +2,13 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h1 class="mb-4">
+    <h1 class="mb-4" style="color: white !important;">
         <i class="fas fa-lightbulb"></i> Recommandations pour vous
     </h1>
     
     <!-- Recommandations hybrides (principales) -->
     <section class="mb-5">
-        <h2 class="mb-3">
+        <h2 class="mb-3" style="color: white !important;">
             <i class="fas fa-trophy text-warning"></i> Top Recommandations
         </h2>
         {% if hybrid_recs %}
@@ -20,8 +20,8 @@
                         <h5 class="text-white">{{ rec.title|truncatewords:3 }}</h5>
                     </div>
                     <div class="card-body">
-                        <h5 class="card-title">{{ rec.title }}</h5>
-                        <p class="card-text text-muted small">{{ rec.description|truncatewords:20 }}</p>
+                        <h5 class="card-title" style="color: white !important;">{{ rec.title }}</h5>
+                        <p class="card-text text-muted small" style="color: rgba(255,255,255,0.7) !important;">{{ rec.description|truncatewords:20 }}</p>
                         <div class="mb-2">
                             {% for genre in rec.genres %}
                             <span class="genre-badge">{{ genre }}</span>
@@ -47,7 +47,7 @@
     
     <!-- Basé sur vos genres préférés -->
     <section class="mb-5">
-        <h3 class="mb-3">
+                        <h3 class="mb-3" style="color: white !important;">
             <i class="fas fa-film"></i> Basé sur vos genres préférés
         </h3>
         {% if genre_recs %}
@@ -56,7 +56,7 @@
             <div class="col-md-4 mb-3">
                 <div class="card">
                     <div class="card-body">
-                        <h5>{{ rec.title }}</h5>
+                        <h5 style="color: white !important;">{{ rec.title }}</h5>
                         <div>
                             {% for genre in rec.genres %}
                             <span class="genre-badge">{{ genre }}</span>
@@ -75,7 +75,7 @@
     
     <!-- Utilisateurs similaires -->
     <section class="mb-5">
-        <h3 class="mb-3">
+        <h3 class="mb-3" style="color: white !important;">
             <i class="fas fa-users"></i> Appréciées par des utilisateurs similaires
         </h3>
         {% if collab_recs %}
@@ -84,8 +84,8 @@
             <div class="col-md-4 mb-3">
                 <div class="card">
                     <div class="card-body">
-                        <h5>{{ rec.title }}</h5>
-                        <p class="small text-muted">
+                        <h5 style="color: white !important;">{{ rec.title }}</h5>
+                        <p class="small text-muted" style="color: rgba(255,255,255,0.7) !important;">
                             <i class="fas fa-user-friends"></i> 
                             Recommandé par {{ rec.recommended_by }} utilisateur(s) similaires
                         </p>

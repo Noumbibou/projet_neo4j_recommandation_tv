@@ -189,7 +189,7 @@ class Series(Neo4jBaseModel):
         return result[0] if result else None
     
     @staticmethod
-    def get_all(limit=100):
+    def get_all(limit=None):
         """Récupérer toutes les séries"""
         query = """
         MATCH (s:Series)
@@ -201,9 +201,10 @@ class Series(Neo4jBaseModel):
                s.year as year,
                COLLECT(DISTINCT g.name) as genres
         ORDER BY s.title
-        LIMIT $limit
         """
-        return neo4j_db.query(query, {'limit': limit})
+        if limit:
+            query += f" LIMIT {limit}"
+        return neo4j_db.query(query)
     
     @staticmethod
     def search(keyword, limit=20):

@@ -6,10 +6,10 @@
     <div class="container">
         <div class="row">
             <div class="col-lg-6">
-                <h3 class="display-3 fw-bold mb-4">
+                <h3 class="display-3 fw-bold mb-4" style="color: white !important;">
                     Découvrez vos prochaines séries préférées
                 </h3>
-                <p class="lead mb-4">
+                <p class="lead mb-4" style="color: rgba(255,255,255,0.8) !important;">
                     Un système de recommandation intelligent basé sur vos goûts et vos notations
                 </p>
                 {% if not user.is_authenticated %}
@@ -31,7 +31,7 @@
 
 <!-- Séries populaires -->
 <section class="container mt-5">
-    <h2 class="mb-4">Séries populaires</h2>
+    <h2 class="mb-4" style="color: white !important;">Séries populaires</h2>
     <div class="row">
         {% for serie in series %}
         <div class="col-md-3 mb-4">
@@ -40,8 +40,8 @@
                     <h4 class="text-white">{{ serie.title|truncatewords:2 }}</h4>
                 </div>
                 <div class="card-body">
-                    <h5 class="card-title">{{ serie.title }}</h5>
-                    <p class="card-text text-muted small">{{ serie.description|truncatewords:15 }}</p>
+                    <h5 class="card-title" style="color: white !important;">{{ serie.title }}</h5>
+                    <p class="card-text text-muted small" style="color: rgba(255,255,255,0.7) !important;">{{ serie.description|truncatewords:15 }}</p>
                     <div class="mb-2">
                         {% for genre in serie.genres %}
                         <span class="genre-badge">{{ genre }}</span>
@@ -65,22 +65,22 @@
 
 <!-- Fonctionnalités -->
 <section class="container my-5 py-5">
-    <h2 class="text-center mb-5">Pourquoi TV Recommender ?</h2>
+    <h2 class="text-center mb-5" style="color: white !important;">Pourquoi TV Recommender ?</h2>
     <div class="row">
         <div class="col-md-4 text-center">
             <i class="fas fa-brain fa-3x text-primary mb-3"></i>
-            <h4>Recommandations intelligentes</h4>
-            <p class="text-muted">Algorithmes avancés basés sur vos goûts</p>
+            <h4 style="color: white !important;">Recommandations intelligentes</h4>
+            <p class="text-muted" style="color: rgba(255,255,255,0.7) !important;">Algorithmes avancés basés sur vos goûts</p>
         </div>
         <div class="col-md-4 text-center">
             <i class="fas fa-users fa-3x text-primary mb-3"></i>
-            <h4>Filtrage collaboratif</h4>
-            <p class="text-muted">Découvrez ce que les autres aiment</p>
+            <h4 style="color: white !important;">Filtrage collaboratif</h4>
+            <p class="text-muted" style="color: rgba(255,255,255,0.7) !important;">Découvrez ce que les autres aiment</p>
         </div>
         <div class="col-md-4 text-center">
             <i class="fas fa-star fa-3x text-primary mb-3"></i>
-            <h4>Notez et suivez</h4>
-            <p class="text-muted">Gardez trace de vos séries préférées</p>
+            <h4 style="color: white !important;">Notez et suivez</h4>
+            <p class="text-muted" style="color: rgba(255,255,255,0.7) !important;">Gardez trace de vos séries préférées</p>
         </div>
     </div>
 </section>

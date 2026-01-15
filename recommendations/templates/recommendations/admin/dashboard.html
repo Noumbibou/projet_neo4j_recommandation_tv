@@ -7,7 +7,7 @@
             <i class="fas fa-tachometer-alt"></i> Dashboard Admin
         </h1>
         <div>
-            <a href="{% url 'recommendations:admin_series_create' %}" class="btn btn-success">
+            <a href="{% url 'recommendations:admin_series_create' %}" class="btn btn-outline-danger">
                 <i class="fas fa-plus"></i> Nouvelle série
             </a>
         </div>
@@ -16,20 +16,20 @@
     <!-- Statistiques globales -->
     <div class="row mb-4">
         <div class="col-md-4">
-            <div class="card text-center p-4 bg-primary">
-                <h2>{{ total_users }}</h2>
+            <div class="card text-center p-3">
+                <h3 class="text-primary">{{ total_users }}</h3>
                 <p class="mb-0">Utilisateurs inscrits</p>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card text-center p-4 bg-success">
-                <h2>{{ total_series }}</h2>
+            <div class="card text-center p-3">
+                <h3 class="text-info">{{ total_series }}</h3>
                 <p class="mb-0">Séries dans le catalogue</p>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card text-center p-4 bg-warning">
-                <h2>{{ popular_series|length }}</h2>
+            <div class="card text-center p-3">
+                <h3 class="text-warning">{{ popular_series|length }}</h3>
                 <p class="mb-0">Séries populaires</p>
             </div>
         </div>
@@ -58,8 +58,8 @@
                         <td>{{ serie.title }}</td>
                         <td>{{ serie.ratings_count }}</td>
                         <td>
-                            <span class="star-rating">
-                                {{ serie.avg_score }}/5
+                            <span style="color: rgba(255,255,255,0.9) !important; font-weight: bold;">
+                                {{ serie.avg_rating }}/5
                             </span>
                         </td>
                         <td>

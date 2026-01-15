@@ -76,20 +76,20 @@
      <div class="search-hero p-3 p-lg-4 mb-4">
          <div class="row align-items-center g-4">
              <div class="col-lg-7">
-                 <h1 class="display-6 fw-bold mb-2">Recherche</h1>
+                 <h1 class="display-6 fw-bold mb-2" style="color: white !important;">Recherche</h1>
                  {% if query %}
-                 <p class="text-muted mb-0">
+                 <p class="text-muted mb-0" style="color: rgba(255,255,255,0.8) !important;">
                      Résultats pour: <strong class="text-white">{{ query }}</strong>
                  </p>
                  {% else %}
-                 <p class="text-muted mb-0">Tape un titre de série pour lancer une recherche.</p>
+                 <p class="text-muted mb-0" style="color: rgba(255,255,255,0.8) !important;">Tape un titre de série pour lancer une recherche.</p>
                  {% endif %}
              </div>
              <div class="col-lg-5">
                  <div class="search-panel p-2">
                      <form class="row g-2" action="{% url 'recommendations:search' %}" method="GET" id="searchForm">
                          <div class="col-12">
-                             <label for="q" class="form-label mb-1">Rechercher une série</label>
+                             <label for="q" class="form-label mb-1" style="color: white !important;">Rechercher une série</label>
                              <div class="input-group">
                                  <span class="input-group-text">
                                      <i class="fas fa-search"></i>
@@ -157,8 +157,8 @@
      </div>
      {% elif query and not results %}
      <div class="card p-5 text-center">
-         <h2 class="h4 mb-2">Aucun résultat</h2>
-         <p class="text-muted mb-3">Essaie un autre mot-clé ou explore le catalogue.</p>
+         <h2 class="h4 mb-2" style="color: white !important;">Aucun résultat</h2>
+         <p class="text-muted mb-3" style="color: rgba(255,255,255,0.8) !important;">Essaie un autre mot-clé ou explore le catalogue.</p>
          <div class="d-flex justify-content-center gap-2">
              <a href="{% url 'recommendations:search' %}" class="btn btn-outline-light">Nouvelle recherche</a>
              <a href="{% url 'recommendations:series_list' %}" class="btn btn-primary">Voir le catalogue</a>
@@ -166,8 +166,8 @@
      </div>
      {% else %}
      <div class="card p-5 text-center">
-         <h2 class="h4 mb-2">Lance une recherche</h2>
-         <p class="text-muted mb-3">Utilise la barre ci-dessus (ou la recherche dans la navbar).</p>
+         <h2 class="h4 mb-2" style="color: white !important;">Lance une recherche</h2>
+         <p class="text-muted mb-3" style="color: rgba(255,255,255,0.8) !important;">Utilise la barre ci-dessus (ou la recherche dans la navbar).</p>
          <a href="{% url 'recommendations:series_list' %}" class="btn btn-primary">Explorer le catalogue</a>
      </div>
      {% endif %}

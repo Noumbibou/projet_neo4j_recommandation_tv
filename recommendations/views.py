@@ -273,6 +273,34 @@ def rate_series_ajax(request):
 
 
 @login_required
+@require_http_methods(["GET"])
+def series_stats_ajax(request, series_id):
+    """Retourner les statistiques d'une série (AJAX)"""
+    try:
+        # Récupérer les statistiques depuis Neo4j
+        rating_info = Rating.get_average_rating(series_id)
+        
+        if rating_info:
+            return JsonResponse({
+                'success': True,
+                'total_ratings': rating_info.get('total_ratings', 0),
+                'average_rating': float(rating_info.get('average_rating', 0)).round(1) if rating_info.get('average_rating') else None
+            })
+        else:
+            return JsonResponse({
+                'success': True,
+                'total_ratings': 0,
+                'average_rating': None
+            })
+    
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+
+@login_required
 @require_http_methods(["POST"])
 def delete_rating_ajax(request):
     """Supprimer une notation (AJAX)"""

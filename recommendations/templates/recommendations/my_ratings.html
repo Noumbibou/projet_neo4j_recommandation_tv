@@ -35,8 +35,8 @@
      <div class="ratings-hero p-3 p-lg-4 mb-4">
          <div class="row align-items-center g-4">
              <div class="col-lg-7">
-                 <h1 class="display-6 fw-bold mb-2">Mes Notations</h1>
-                 <p class="text-muted mb-0">Retrouve toutes tes notes et retourne facilement sur les pages des séries.</p>
+                 <h1 class="display-6 fw-bold mb-2" style="color: white !important;">Mes Notations</h1>
+                 <p class="text-muted mb-0" style="color: rgba(255,255,255,0.8) !important;">Retrouve toutes tes notes et retourne facilement sur les pages des séries.</p>
              </div>
              <div class="col-lg-5">
                  <div class="panel p-2">
@@ -57,8 +57,8 @@
      {% if ratings %}
      <div class="card">
          <div class="card-header d-flex align-items-center justify-content-between">
-             <h4 class="mb-0">Historique</h4>
-             <span class="text-muted small">Les plus récentes apparaissent en premier</span>
+             <h4 class="mb-0" style="color: white !important;">Historique</h4>
+             <span class="text-muted small" style="color: rgba(255,255,255,0.7) !important;">Les plus récentes apparaissent en premier</span>
          </div>
          <div class="card-body">
              <div class="table-responsive">
@@ -90,16 +90,7 @@
                                  {% endif %}
                              </td>
                              <td>
-                                 <span class="star-rating">
-                                     {% for i in "12345" %}
-                                         {% if forloop.counter <= rating.score %}
-                                         <i class="fas fa-star"></i>
-                                         {% else %}
-                                         <i class="far fa-star"></i>
-                                         {% endif %}
-                                     {% endfor %}
-                                 </span>
-                                 <span class="ms-2 text-muted">{{ rating.score }}/5</span>
+                                <span style="color: rgba(255,255,255,0.9) !important; font-size: 1.1rem; font-weight: bold;">{{ rating.rating }}/5</span>
                              </td>
                              <td>
                                  {% if rating.date %}
@@ -122,8 +113,8 @@
      </div>
      {% else %}
      <div class="card p-5 text-center">
-         <h2 class="h4 mb-2">Aucune notation</h2>
-         <p class="text-muted mb-3">Commence par noter quelques séries pour débloquer les recommandations.</p>
+         <h2 class="h4 mb-2" style="color: white !important;">Aucune notation</h2>
+         <p class="text-muted mb-3" style="color: rgba(255,255,255,0.8) !important;">Commence par noter quelques séries pour débloquer les recommandations.</p>
          <div class="d-flex justify-content-center gap-2">
              <a href="{% url 'recommendations:series_list' %}" class="btn btn-primary">Explorer le catalogue</a>
              <a href="{% url 'recommendations:recommendations' %}" class="btn btn-outline-light">Mes recommandations</a>

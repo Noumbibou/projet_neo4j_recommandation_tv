@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h1 class="mb-4">
+    <h1 class="mb-4" style="color: white !important;">
         <i class="fas fa-user-circle"></i> Mon Profil
     </h1>
     
@@ -11,24 +11,24 @@
         <div class="col-md-3">
             <div class="card text-center p-4">
                 <h3 class="text-primary">{{ stats.series_count|default:0 }}</h3>
-                <p class="text-muted mb-0">Séries notées</p>
+                <p class="text-muted mb-0" style="color: rgba(255,255,255,0.8) !important;">Séries notées</p>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card text-center p-4">
                 <h3 class="text-warning">{{ stats.avg_rating|default:0 }}/5</h3>
-                <p class="text-muted mb-0">Note moyenne</p>
+                <p class="text-muted mb-0" style="color: rgba(255,255,255,0.8) !important;">Note moyenne</p>
             </div>
         </div>
         <div class="col-md-6">
             <div class="card p-4">
-                <h5>Genres préférés</h5>
+                <h5 style="color: white !important;">Genres préférés</h5>
                 {% if stats.genres %}
                     {% for genre in stats.genres %}
                     <span class="genre-badge">{{ genre }}</span>
                     {% endfor %}
                 {% else %}
-                    <p class="text-muted">Notez des séries pour découvrir vos genres préférés</p>
+                    <p class="text-muted" style="color: rgba(255,255,255,0.8) !important;">Notez des séries pour découvrir vos genres préférés</p>
                 {% endif %}
             </div>
         </div>
@@ -37,7 +37,7 @@
     <!-- Notations récentes -->
     <div class="card">
         <div class="card-header">
-            <h4 class="mb-0">Mes notations récentes</h4>
+            <h4 class="mb-0" style="color: white !important;">Mes notations récentes</h4>
         </div>
         <div class="card-body">
             {% if ratings %}
@@ -66,15 +66,7 @@
                                 {% endfor %}
                             </td>
                             <td>
-                                <span class="star-rating">
-                                    {% for i in "12345" %}
-                                        {% if forloop.counter <= rating.score %}
-                                        <i class="fas fa-star"></i>
-                                        {% else %}
-                                        <i class="far fa-star"></i>
-                                        {% endif %}
-                                    {% endfor %}
-                                </span>
+                                <span style="color: rgba(255,255,255,0.9) !important; font-weight: bold;">{{ rating }}/5</span>
                             </td>
                             <td>{{ rating.date|date:"d/m/Y" }}</td>
                             <td>
@@ -97,7 +89,7 @@
             {% else %}
             <div class="text-center py-5">
                 <i class="fas fa-star fa-3x text-muted mb-3"></i>
-                <p class="text-muted">Vous n'avez pas encore noté de séries</p>
+                <p class="text-muted" style="color: rgba(255,255,255,0.8) !important;">Vous n'avez pas encore noté de séries</p>
                 <a href="{% url 'recommendations:series_list' %}" class="btn btn-primary">
                     Explorer le catalogue
                 </a>
